@@ -36,7 +36,6 @@ export const loadProfessionsList = () => async (dispatch, getState) => {
     const { lastFetch } = getState().professions;
         if (isOutdated(lastFetch)) {
             dispatch(professionsRequested());
-            console.log("professions");
             try {
                 const { content } = await professionService.get();
                 dispatch(professionsRecieved(content));

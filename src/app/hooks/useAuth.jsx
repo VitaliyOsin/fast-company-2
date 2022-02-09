@@ -65,8 +65,6 @@ const AuthProvider = ({ children }) => {
             });
             setTokens(data);
 
-            console.log("REST: ", rest);
-
             await createUser({
                 _id: data.localId,
                 email,
