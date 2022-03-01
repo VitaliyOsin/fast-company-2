@@ -1,10 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router";
-import { useAuth } from "../hooks/useAuth";
 import { toast } from "react-toastify";
 import PropTypes from "prop-types";
 import { nanoid } from "nanoid";
 import commentService from "../services/comment.service";
+import { useSelector } from "react-redux";
+import { getCurrentUserId } from "../store/users";
 
 const CommentsContext = React.createContext();
 
@@ -14,7 +15,7 @@ export const useComments = () => {
 
 export const CommentsProvider = ({ children }) => {
     const { userId } = useParams();
-    const { currentUser } = useAuth();
+    const currentUserId = useSelector(getCurrentUserId());
     const [isLoading, setLoading] = useState(true);
     const [comments, setComments] = useState([]);
     const [error, setError] = useState(null);
@@ -24,12 +25,12 @@ export const CommentsProvider = ({ children }) => {
             ...data,
             _id: nanoid(),
             pageId: userId,
-            created_at: (Date.now()),
-            userId: currentUser._id
+            created_at: Date.now(),
+            userId: currentUserId
         };
         try {
             const { content } = await commentService.createComment(comment);
-            setComments(prevState => [...prevState, content]);
+            setComments((prevState) => [...prevState, content]);
         } catch (err) {
             errorCatcher(err);
         }
@@ -50,7 +51,9 @@ export const CommentsProvider = ({ children }) => {
         try {
             const { content } = await commentService.removeComment(id);
             if (content === null) {
-                setComments(prevState => prevState.filter(c => c._id !== id));
+                setComments((prevState) =>
+                    prevState.filter((c) => c._id !== id)
+                );
             }
         } catch (error) {
             errorCatcher(error);
@@ -73,12 +76,23 @@ export const CommentsProvider = ({ children }) => {
         getComments();
     }, [userId]);
     return (
-        <CommentsContext.Provider value={{ comments, createComment, getComments, removeComment, isLoading }}>
-            { children }
+        <CommentsContext.Provider
+            value={{
+                comments,
+                createComment,
+                getComments,
+                removeComment,
+                isLoading
+            }}
+        >
+            {children}
         </CommentsContext.Provider>
     );
 };
 
 CommentsProvider.propTypes = {
-    children: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.node), PropTypes.node])
+    children: PropTypes.oneOfType([
+        PropTypes.arrayOf(PropTypes.node),
+        PropTypes.node
+    ])
 };

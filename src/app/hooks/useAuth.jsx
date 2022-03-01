@@ -5,6 +5,7 @@ import axios from "axios";
 import userService from "../services/user.service";
 import localStorageService, { setTokens } from "../services/localStorage.service";
 import { useHistory } from "react-router-dom";
+import getRandomInt from "../utils/randomInt";
 
 export const httpAuth = axios.create({
     baseURL: "https://identitytoolkit.googleapis.com/v1/",
@@ -54,8 +55,6 @@ const AuthProvider = ({ children }) => {
         }
     }
 
-    const randomInt = (min, max) => Math.floor(Math.random() * (max - min) + min);
-
     async function signUp({ email, password, ...rest }) {
         try {
             const { data } = await httpAuth.post(`accounts:signUp`, {
@@ -69,8 +68,8 @@ const AuthProvider = ({ children }) => {
                 _id: data.localId,
                 email,
                 image: `https://avatars.dicebear.com/api/${rest.sex}/${(Math.random() + 1).toString(36).substring(7)}.svg`,
-                rate: randomInt(1, 5),
-                completedMeetings: randomInt(0, 200),
+                rate: getRandomInt(1, 5),
+                completedMeetings: getRandomInt(0, 200),
                 ...rest
             });
         } catch (error) {

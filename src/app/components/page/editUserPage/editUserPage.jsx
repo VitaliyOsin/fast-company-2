@@ -6,13 +6,20 @@ import SelectField from "../../common/form/selectField";
 import RadioField from "../../common/form/radio.Field";
 import MultiSelectField from "../../common/form/multiSelectField";
 import BackHistoryButton from "../../common/backButton";
-import { useAuth } from "../../../hooks/useAuth";
-import { useSelector } from "react-redux";
-import { getQualities, getQualitiesLoadingStatus } from "../../../store/qualities";
-import { getProfessions, getProfessionsLoadingStatus } from "../../../store/professions";
+import { useSelector, useDispatch } from "react-redux";
+import {
+    getQualities,
+    getQualitiesLoadingStatus
+} from "../../../store/qualities";
+import {
+    getProfessions,
+    getProfessionsLoadingStatus
+} from "../../../store/professions";
+import { getCurrentUserData, updateUser } from "../../../store/users";
 
 const EditUserPage = () => {
-    const { currentUser, updateUser } = useAuth();
+    const dispatch = useDispatch();
+    const currentUser = useSelector(getCurrentUserData());
     const { userId } = useParams();
     const history = useHistory();
     const [isLoading, setIsLoading] = useState(false);
@@ -29,19 +36,21 @@ const EditUserPage = () => {
     const qualityLoading = useSelector(getQualitiesLoadingStatus());
     const [errors, setErrors] = useState({});
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
+
         const isValid = validate();
         if (!isValid) return;
-        try {
-            await updateUser({ ...data, qualities: data.qualities.map(q => q.value) });
-            history.push(`/users/${data._id}`);
-        } catch (error) {
-            errorCatcher(error);
-        }
+        dispatch(
+            updateUser({
+                ...data,
+                qualities: data.qualities.map((q) => q.value)
+            })
+        );
+        history.push(`/users/${data._id}`);
     };
 
-    const getQuality = id => qualities.find(el => el._id === id);
+    const getQuality = (id) => qualities.find((el) => el._id === id);
     const transformData = (data) => {
         return data.map((qual) => ({ label: qual.name, value: qual._id }));
     };
@@ -50,10 +59,12 @@ const EditUserPage = () => {
             history.push("/users/" + currentUser._id + "/edit");
         }
         setIsLoading(true);
-        setData(({
+        setData({
             ...currentUser,
-            qualities: transformData([...currentUser.qualities.map(cu => getQuality(cu))])
-        }));
+            qualities: transformData([
+                ...currentUser.qualities.map((cu) => getQuality(cu))
+            ])
+        });
     }, []);
     useEffect(() => {
         if (data._id) setIsLoading(false);
@@ -108,10 +119,10 @@ const EditUserPage = () => {
         setErrors(errors);
         return Object.keys(errors).length === 0;
     };
-    function errorCatcher(error) {
+    /* function errorCatcher(error) {
         const { message } = error.response.data;
         setErrors(message);
-    }
+    } */
     const isValid = Object.keys(errors).length === 0;
 
     useEffect(() => validate(), [data]);
@@ -121,7 +132,10 @@ const EditUserPage = () => {
             <BackHistoryButton />
             <div className="row">
                 <div className="col-md-6 offset-md-3 shadow p-4">
-                    {!isLoading && !professionLoading && !qualityLoading && Object.keys(professions).length > 0 ? (
+                    {!isLoading &&
+                    !professionLoading &&
+                    !qualityLoading &&
+                    Object.keys(professions).length > 0 ? (
                         <form onSubmit={handleSubmit}>
                             <TextField
                                 label="Имя"
@@ -179,7 +193,11 @@ const EditUserPage = () => {
                                 label="Выберите ваш пол"
                             />
                             <MultiSelectField
-                                defaultValue={ transformData(qualities.filter(qu => currentUser.qualities.includes(qu._id))) }
+                                defaultValue={transformData(
+                                    qualities.filter((qu) =>
+                                        currentUser.qualities.includes(qu._id)
+                                    )
+                                )}
                                 options={transformData(qualities)}
                                 onChange={handleChange}
                                 name="qualities"
